@@ -8,6 +8,8 @@ import os
 
 scheme = 'http://'
 target_ip = '114.55.250.229'
+port_no = '90'
+app_name = 'LbswWebService'
 
 
 def showBizInterface():
