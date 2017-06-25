@@ -70,6 +70,7 @@ def get_all_clients_info():
     result = requests.post(url, data=dt)
     logging.debug(result.text)
     res_jo = json.loads(result.text)
+    #TODO: 等待水务端处理API异常
     print(res_jo.msg)
     input('请按任意键继续...')
 
