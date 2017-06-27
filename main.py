@@ -3,18 +3,44 @@
 '''
 本程序用于福泉行处理消费代扣业务逻辑
 '''
+import base64
 import datetime
+import json
+import logging
 import os
 import sys
+
+import pyDes
 import requests
-import logging
-import json
 
 scheme = 'http://'
 target_ip = '114.55.250.229'
 port_no = ':90'
 app_name = '/LbswWebService'
 bank_name = '富民银行'
+
+class DES:
+    # IV必须是 8 字节长度的十六进制数
+    iv = 'F8A3E9A5'
+    # key加密密钥长度，24字节
+    key = 'bRs5oXHF7tg=bRs5oXHF7tg='
+
+    def __init__(self,key):
+        self.key = key
+
+    def encrypt(self, data):
+        k = pyDes.triple_des(self.key, pyDes.CBC, self.iv, pad=None, padmode=pyDes.PAD_PKCS5)
+        d = k.encrypt(data)
+        d2 = base64.encodebytes(d)
+        d3 = str(d2, encoding='utf-8')
+        return d3
+
+    def decrypt(self, data):
+        k = pyDes.triple_des(self.key, pyDes.CBC, self.iv, pad=None, padmode=pyDes.PAD_PKCS5)
+        data2 = base64.decodebytes(data)
+        d = k.decrypt(data2)
+        d2 = str(d,encoding='utf-8')
+        return d2
 
 
 # 程序索引页面
@@ -63,15 +89,26 @@ def get_all_clients_info():
     api_name = '/GetOweRecord'
     url = '{0}{1}{2}{3}{4}'.format(scheme, target_ip, port_no, app_name, api_name)
     logging.info(url)
-    query_from = input('请输入开始月份（201705）：')
-    query_to = input('请输入截止月份（201705）：')
+    query_from = input('请输入开始月份（201701）：')
+    query_to = input('请输入截止月份（201701）：')
     # 构造数据结构
-    dt = {'BankName': bank_name, 'PeriodFrom': query_from, 'PeriodTo': query_to}
-    result = requests.post(url, data=dt)
-    logging.debug(result.text)
+    src_struct = {'BankName': bank_name, 'PeriodFrom': query_from, 'PeriodTo': query_to}
+    src_str = str(src_struct)
+    src_str = src_str.replace("'",'"')
+    des = DES('bRs5oXHF7tg=bRs5oXHF7tg=')
+    encryptdata = des.encrypt(src_str.encode('utf-8'))
+    encryptdata = encryptdata.replace('\n','')
+    print('加密后的数据是: %s ' % (encryptdata))
+    crypto_res = {'Result':encryptdata}
+    result = requests.post(url, data=crypto_res)
+    logging.info(crypto_res)
+    print('结果 %s' % result.text)
     res_jo = json.loads(result.text)
     #TODO: 等待水务端处理API异常
-    print(res_jo.msg)
+    logging.info('Return Msg: %s' % res_jo['msg'])
+    res_list = res_jo['detail']
+    for per in res_list:
+        print('账号：%s' % per['账号'])
     input('请按任意键继续...')
 
 
