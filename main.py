@@ -116,6 +116,7 @@ def sync_client_payment_info():
     # 从输入构造结构体
     period = input('请输入客户缴费月份：')
     name = input('请输入客户姓名：')
+    
 
 
 # 22代码 批量下载客户欠费信息
@@ -143,7 +144,7 @@ def get_all_clients_info():
     encryptdata = des.encrypt(src_str.encode('utf-8'))
     encryptdata = encryptdata.replace('\n', '')
 
-    logging.info('加密后的数据是: %s ' % (encryptdata))
+    print('加密后的数据是: %s ' % (encryptdata))
 
     # 生成传输用到的POST数据
     crypto_res = {'Result': encryptdata}
@@ -159,8 +160,14 @@ def get_all_clients_info():
 
     res_list = res_jo['detail']
 
+    print(res_list)
+
     for per in res_list:
+        print('-'*20)
+        print('户名：%s' % per['账号户名'])
         print('账号：%s' % per['账号'])
+        print('数据标识：%s' % per['数据标识'])
+        print('水费：%s' % per['水费'])
     input('请按任意键继续...')
 
 
